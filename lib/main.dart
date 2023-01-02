@@ -1,24 +1,26 @@
 import 'dart:io';
-
+import 'package:get_it/get_it.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:road_alert/screens/camera_preview_screen.dart';
+import 'package:road_alert/services/google_maps_service.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import './screens/camera_preview_screen.dart';
+import 'package:road_alert/services/incidents_service.dart';
+import 'package:road_alert/services/location_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
 
-  if (!dotenv.env.containsKey('SUPABASE_URL') ||
-      !dotenv.env.containsKey('SUPABASE_ANON_KEY')) {
-    return;
-  }
-
-  await Supabase.initialize(
-    url: dotenv.env['SUPABASE_URL']!,
-    anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
+  GetIt.I.registerFactory(() => GoogleMapsService(
+      googleMapsUrl: "https://maps.googleapis.com/maps/api/geocode",
+      apiKey: dotenv.env["GOOGLE_MAPS_API_KEY"]!));
+  GetIt.I.registerSingleton(
+    IncidentsService(
+      functionUrl: '${dotenv.env['SUPABASE_FUNCTIONS_URL']}/hello-world',
+    ),
   );
+  GetIt.I.registerSingleton(LocationService());
 
   runApp(const MyApp());
 }
@@ -49,10 +51,27 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   final _formKey = GlobalKey<FormState>();
-  final supabase = Supabase.instance.client;
-  String newDescription = '';
-  String newLocation = '';
-  XFile? cameraImage;
+  String _newDescription = '';
+  String _currentAddress = '';
+  XFile? _cameraImage;
+
+  @override
+  void initState() {
+    super.initState();
+
+    var locationService = GetIt.I.get<LocationService>();
+    var googleMapsService = GetIt.I.get<GoogleMapsService>();
+
+    locationService.getLocation().then((position) {
+      googleMapsService
+          .getFormattedAddress(position.latitude, position.longitude)
+          .then((address) {
+        setState(() {
+          _currentAddress = address;
+        });
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -83,74 +102,76 @@ class _MyHomePageState extends State<MyHomePage> {
                         return 'Must enter a description!';
                       }
 
-                      newDescription = value;
+                      _newDescription = value;
                       return null;
                     },
                   ),
                   const SizedBox(
                     height: 20,
                   ),
-                  TextFormField(
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      labelText: 'Enter a location',
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Must enter a location!';
-                      }
-
-                      newLocation = value;
-                      return null;
-                    },
+                  Text(
+                    _currentAddress.isNotEmpty
+                        ? _currentAddress
+                        : 'Loading address...',
+                    textAlign: TextAlign.left,
                   ),
                   const SizedBox(
                     height: 50,
                   ),
                   ElevatedButton(
-                    child: const Text("TAKE PICTURE"),
-                    onPressed: () {
-                      Navigator.push<XFile>(
-                        context,
+                    child: const Text("Take Picture"),
+                    onPressed: () async {
+                      Navigator.of(context)
+                          .push(
                         MaterialPageRoute(
                           builder: (context) => const CameraPreviewScreen(),
                         ),
-                      ).then((file) {
+                      )
+                          .then((image) {
                         setState(() {
-                          cameraImage = file;
+                          _cameraImage = image;
                         });
                       });
                     },
                   ),
                   const SizedBox(
-                    height: 50,
+                    height: 25,
                   ),
-                  cameraImage != null
-                      ? Image.file(File(cameraImage!.path))
-                      : const Text('(No image taken)')
+                  _cameraImage == null
+                      ? const Text("(No image taken.)")
+                      : Column(
+                          children: [
+                            Image.file(File(_cameraImage!.path)),
+                            const SizedBox(
+                              height: 25,
+                            ),
+                            ElevatedButton(
+                              child: const Text('Submit Report'),
+                              onPressed: () async {
+                                if (_formKey.currentState!.validate()) {
+                                  var incidentsService =
+                                      GetIt.I.get<IncidentsService>();
+                                  var locationService =
+                                      GetIt.I.get<LocationService>();
+
+                                  var location =
+                                      await locationService.getLocation();
+                                  incidentsService.createIncident(
+                                      _newDescription,
+                                      _currentAddress,
+                                      location.latitude,
+                                      location.longitude,
+                                      _cameraImage!.path);
+                                }
+                              },
+                            )
+                          ],
+                        ),
                 ],
               ),
             ),
           ),
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          if (_formKey.currentState!.validate()) {
-            debugPrint('submit thingy.');
-
-            final result = await supabase.from('incidents') //
-                .insert({
-              'description': newDescription,
-              'location': newLocation
-            }).select();
-            debugPrint(result.length.toString());
-          } else {
-            debugPrint('Don\'t submit thingy.');
-          }
-        },
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
       ),
     );
   }

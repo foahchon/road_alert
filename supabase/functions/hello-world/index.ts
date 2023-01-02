@@ -1,58 +1,50 @@
-// Follow this setup guide to integrate the Deno language server with your editor:
-// https://deno.land/manual/getting_started/setup_your_environment
-// This enables autocomplete, go to definition, etc.
+import { Application, Status } from 'https://deno.land/x/oak@v11.1.0/mod.ts'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.2.2'
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { multiParser, Form as _Form, FormFile } from "https://deno.land/x/multiparser@0.114.0/mod.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.2.2";
+const app = new Application();
 
-serve(async (req) => {
+app.use(async (ctx) => {
+  const body = ctx.request.body();
 
-  const supabaseClient = createClient(
-    Deno.env.get("MY_SUPABASE_URL") ?? "",
-    Deno.env.get("MY_SUPABASE_SERVICE_ROLE_KEY") ?? "");
+  if (body.type === "form-data") {
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
 
-  const form = await multiParser(req);
+    const value = body.value;
+    const formData = await value.read({ maxSize: 1000000 });
+    ctx.response.body = JSON.stringify(formData);
+    const file = formData.files?.find(f => f.name === 'image');
+    const newFileName = `${crypto.randomUUID()}${file?.originalName.substring(file?.originalName.lastIndexOf("."))}`;
 
-  const formFile = form?.files["image"] as FormFile;
-  const uploadFileNameExtension = formFile.filename.substring(formFile.filename.lastIndexOf("."));
-  const uploadFileName = `${crypto.randomUUID()}${uploadFileNameExtension}`;
+    const insertData = {
+      description: formData.fields['description'],
+      address: formData.fields['address'],
+      latitude: formData.fields['latitude'],
+      longitude: formData.fields['longitude'],
+      image_path: newFileName
+    };
 
-  const { data, error } = await supabaseClient
-    .from('incidents')
-    .insert({
-      description: form?.fields["description"],
-      location: form?.fields["location"],
-      image_path: uploadFileName
-    }).select();
-  
-  if (data!.length > 0) { // Creation of table row was successful.
-    const { data, error } =
-      await supabaseClient
-        .storage
-        .from("incident-images")
-        .upload(uploadFileName, formFile.content);
-    
+    const { data, error } = await supabaseClient.from('incidents').insert(insertData).select();
+
     if (error) {
-      console.log("Upload error.");
+      ctx.throw(500, JSON.stringify(error));
     }
-    else if (data) {
-      console.log("Upload successful.");
+
+    if (data!.length > 0) {
+      const { error } = await supabaseClient.storage.from('incident-images').upload(newFileName, file?.content!);
+
+      if (error) {
+        ctx.throw(500, JSON.stringify(error));
+      }
+
+      ctx.response.status = Status.OK;
+      return;
     }
   }
 
-  if (error) {
-    return new Response("", { status: 500 });
-  }
-  
-  return new Response(
-    JSON.stringify(data),
-    { headers: { "Content-Type": "application/json" } },
-  )
-})
+  ctx.response.body = body.type;
+});
 
-// To invoke:
-// curl -i --location --request POST 'http://localhost:54321/functions/v1/' \
-//   --header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0' \
-//   --header 'Content-Type: application/json' \
-//   --data '{"name":"Functions"}'
+await app.listen({ port: 8000 });

@@ -10,14 +10,19 @@ class CameraPreviewScreen extends StatefulWidget {
 
 class _CameraPreviewScreenState extends State<CameraPreviewScreen> {
   late final CameraController _cameraController;
+  bool _cameraIsInitialized = false;
 
   @override
   void initState() {
+    super.initState();
+    WidgetsFlutterBinding.ensureInitialized();
+
     availableCameras().then((cameras) {
       _cameraController = CameraController(cameras[0], ResolutionPreset.medium);
-      _cameraController.initialize().then((_) => setState(() {}));
+      _cameraController.initialize().then((_) => setState(() {
+            _cameraIsInitialized = true;
+          }));
     });
-    super.initState();
   }
 
   @override
@@ -28,7 +33,7 @@ class _CameraPreviewScreenState extends State<CameraPreviewScreen> {
     return Scaffold(
       body: Stack(
         children: [
-          _cameraController.value.isInitialized
+          _cameraIsInitialized
               ? AspectRatio(
                   aspectRatio: deviceRatio,
                   child: Transform(
