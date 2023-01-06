@@ -9,7 +9,14 @@ app.use(async (ctx) => {
   if (body.type === "form-data") {
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      {
+        global: {
+          headers: {
+            Authorization: ctx.request.headers.get('Authorization')!
+          }
+        }
+      }
     );
 
     const value = body.value;
@@ -17,13 +24,15 @@ app.use(async (ctx) => {
     ctx.response.body = JSON.stringify(formData);
     const file = formData.files?.find(f => f.name === 'image');
     const newFileName = `${crypto.randomUUID()}${file?.originalName.substring(file?.originalName.lastIndexOf("."))}`;
+    const { data: { user } } = await supabaseClient.auth.getUser();
 
     const insertData = {
       description: formData.fields['description'],
       address: formData.fields['address'],
       latitude: formData.fields['latitude'],
       longitude: formData.fields['longitude'],
-      image_path: newFileName
+      image_path: newFileName,
+      user_id: user?.id
     };
 
     const { data, error } = await supabaseClient.from('incidents').insert(insertData).select();

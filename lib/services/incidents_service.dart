@@ -1,22 +1,13 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
+import 'package:road_alert/services/auth_service.dart';
 
 class IncidentsService {
   final String _functionUrl;
+  final AuthService _authService;
 
-  IncidentsService({required String functionUrl}) : _functionUrl = functionUrl {
-    if (!dotenv.env.containsKey('SUPABASE_URL') ||
-        !dotenv.env.containsKey('SUPABASE_ANON_KEY')) {
-      throw const AuthException(
-          'Supabase URL and Supabase anon key must be present.');
-    }
-
-    Supabase.initialize(
-      url: dotenv.env['SUPABASE_URL']!,
-      anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
-    );
-  }
+  IncidentsService(AuthService authService, {required String functionUrl})
+      : _functionUrl = functionUrl,
+        _authService = authService;
 
   Future<http.StreamedResponse> createIncident(
       String description,
@@ -24,12 +15,16 @@ class IncidentsService {
       double latitude,
       double longitude,
       String photoPath) async {
+    if (!_authService.isSignedIn) {
+      throw Exception("Not signed in!");
+    }
     var uri = Uri.parse(_functionUrl);
     var request = http.MultipartRequest('POST', uri)
       ..fields['description'] = description
       ..fields['address'] = address
       ..fields['latitude'] = latitude.toString()
       ..fields['longitude'] = longitude.toString()
+      ..headers['Authorization'] = 'Bearer ${_authService.userAccessToken}'
       ..files.add(
         await http.MultipartFile.fromPath(
           'image',
