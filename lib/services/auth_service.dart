@@ -1,16 +1,16 @@
 import 'dart:async';
+import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AuthService {
   final _supabase = Supabase.instance.client;
   late final _authEventStream = StreamController<AuthEvent>();
-  late final StreamSubscription<AuthState> _authStateStreamSubscription;
 
   AuthService() {
-    _authStateStreamSubscription =
-        _supabase.auth.onAuthStateChange.listen((data) {
+    _supabase.auth.onAuthStateChange.listen((data) {
       switch (data.event) {
         case AuthChangeEvent.signedIn:
+          debugPrint('Logged in as: ${data.session!.user.email}');
           _authEventStream.add(AuthEvent(type: AuthEventType.signIn));
           break;
 
@@ -21,7 +21,6 @@ class AuthService {
         case AuthChangeEvent.tokenRefreshed:
           _authEventStream.add(AuthEvent(type: AuthEventType.tokenRefreshing));
           break;
-
         default:
           break;
       }
@@ -52,9 +51,12 @@ class AuthService {
     return _supabase.auth.currentSession?.accessToken;
   }
 
+  String? get userId {
+    return _supabase.auth.currentUser?.id;
+  }
+
   signOut() async {
     await _supabase.auth.signOut();
-    _authStateStreamSubscription.cancel();
   }
 }
 

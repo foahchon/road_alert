@@ -1,9 +1,13 @@
 import 'package:http/http.dart' as http;
 import 'package:road_alert/services/auth_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../models/incident_model.dart';
 
 class IncidentsService {
   final String _functionUrl;
   final AuthService _authService;
+  final _supabase = Supabase.instance.client;
 
   IncidentsService(AuthService authService, {required String functionUrl})
       : _functionUrl = functionUrl,
@@ -34,5 +38,11 @@ class IncidentsService {
       );
 
     return await request.send();
+  }
+
+  Future<List<Incident>> getIncidents() async {
+    var data = await _supabase.from('incidents').select() as List<dynamic>;
+    return List<Incident>.from(
+        data.map((incident) => Incident.fromJson(incident)));
   }
 }
