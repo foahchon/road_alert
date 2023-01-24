@@ -50,11 +50,15 @@ class MyApp extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider(
-          create: (context) => AuthenticationBloc(GetIt.I.get<AuthService>()),
+          create: (context) => AuthenticationBloc(
+            GetIt.I.get<AuthService>(),
+          ),
         ),
         BlocProvider(
           create: (context) => ManagementCubit(
-              GetIt.I.get<AuthService>(), GetIt.I.get<IncidentsService>()),
+            GetIt.I.get<AuthService>(),
+            GetIt.I.get<IncidentsService>(),
+          ),
         )
       ],
       child: MaterialApp(
@@ -145,7 +149,7 @@ class _MyHomePageState extends State<MyHomePage> with RouteAware {
             onSelected: (value) {
               switch (value) {
                 case 1:
-                  Navigator.of(context).pushReplacement(
+                  Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (_) => const ManagementScreen(),
                     ),

@@ -3,6 +3,7 @@ import 'package:road_alert/services/auth_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/incident_model.dart';
+import '../models/incident_note_model.dart';
 
 class IncidentsService {
   final String _functionUrl;
@@ -44,5 +45,24 @@ class IncidentsService {
     var data = await _supabase.from('incidents').select() as List<dynamic>;
     return List<Incident>.from(
         data.map((incident) => Incident.fromJson(incident)));
+  }
+
+  String getPublicUrlForPath(String path) {
+    return _supabase.storage.from('incident-images').getPublicUrl(path);
+  }
+
+  void completeIncident(Incident incident) async {
+    await _supabase
+        .from('incidents')
+        .update({'complete': true}).eq('id', incident.id);
+  }
+
+  Future<List<IncidentNote>> getNotesForIncident(Incident incident) async {
+    var data = await _supabase
+        .from('incident_notes_view')
+        .select()
+        .eq('incident_id', incident.id) as List<dynamic>;
+    return List<IncidentNote>.from(
+        data.map((note) => IncidentNote.fromJson(note)));
   }
 }
