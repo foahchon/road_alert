@@ -1,20 +1,39 @@
 part of 'management_cubit.dart';
 
 class ManagementState extends Equatable {
-  final ManagementStatus status;
+  @override
+  List<Object> get props => [];
+}
 
-  const ManagementState.unknown() : status = ManagementStatus.unknown;
-  const ManagementState({required this.status});
-  const ManagementState.requested() : status = ManagementStatus.requested;
-  const ManagementState.loading() : status = ManagementStatus.loading;
-  const ManagementState.notSignedIn() : status = ManagementStatus.notSignedIn;
+class ManagementInitialState extends ManagementState {
+  ManagementInitialState();
 
   @override
-  List<Object> get props => [status];
+  List<Object> get props => [];
+}
+
+class IncidentsLoading extends ManagementState {
+  @override
+  List<Object> get props => [];
 }
 
 class IncidentsLoaded extends ManagementState {
   final List<Incident> incidents;
-  const IncidentsLoaded(this.incidents)
-      : super(status: ManagementStatus.loaded);
+  IncidentsLoaded({required this.incidents});
+
+  @override
+  List<Object> get props => [incidents];
+}
+
+class IncidentNotesLoading extends ManagementState {
+  @override
+  List<Object> get props => [];
+}
+
+class IncidentNotesLoaded extends ManagementState {
+  final List<IncidentNote> notes;
+  IncidentNotesLoaded({required this.notes});
+
+  @override
+  List<Object> get props => [notes];
 }

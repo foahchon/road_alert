@@ -61,8 +61,17 @@ class IncidentsService {
     var data = await _supabase
         .from('incident_notes_view')
         .select()
-        .eq('incident_id', incident.id) as List<dynamic>;
+        .eq('incident_id', incident.id)
+        .order('created_at', ascending: false) as List<dynamic>;
     return List<IncidentNote>.from(
         data.map((note) => IncidentNote.fromJson(note)));
+  }
+
+  Future<void> addNoteForIncident(Incident incident, String text) async {
+    await _supabase.from('incident_notes').insert({
+      'incident_id': incident.id,
+      'text': text,
+      'user_id': _authService.userId
+    });
   }
 }

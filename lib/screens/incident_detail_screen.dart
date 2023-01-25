@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:map_launcher/map_launcher.dart';
 import 'package:road_alert/models/incident_model.dart';
 import 'package:road_alert/services/incidents_service.dart';
 
-import '../models/incident_note_model.dart';
+import '../bloc/management/management_cubit.dart';
 
 class IncidentDetailScreen extends StatefulWidget {
   final Incident _incident;
@@ -19,18 +21,13 @@ class IncidentDetailScreen extends StatefulWidget {
 
 class IncidentDetailScreenState extends State<IncidentDetailScreen> {
   String? _imagePath;
-  List<IncidentNote>? _notes;
+  final _myController = TextEditingController();
 
   @override
   void initState() {
     _imagePath = widget._incidentsService
         .getPublicUrlForPath(widget._incident.imagePath);
-    widget._incidentsService
-        .getNotesForIncident(widget._incident)
-        .then((notes) {
-      setState(() => _notes = notes);
-      debugPrint(_notes!.length.toString());
-    });
+    context.read<ManagementCubit>().getNotesForIncident(widget._incident);
     super.initState();
   }
 
@@ -70,16 +67,44 @@ class IncidentDetailScreenState extends State<IncidentDetailScreen> {
                 widget._incidentsService.completeIncident(widget._incident);
               },
             ),
-            _notes == null
-                ? const Text('no notes')
-                : ListView.builder(
-                    itemCount: _notes!.length,
+            ElevatedButton(
+              child: const Text('Navigate To Location'),
+              onPressed: () async {
+                (await MapLauncher.installedMaps).first.showDirections(
+                    destination: Coords(
+                        widget._incident.latitude, widget._incident.longitude));
+              },
+            ),
+            TextField(
+              controller: _myController,
+            ),
+            ElevatedButton(
+              child: const Text('Add note'),
+              onPressed: () async {
+                await context
+                    .read<ManagementCubit>()
+                    .addNoteForIncident(widget._incident, _myController.text);
+                _myController.clear();
+              },
+            ),
+            BlocBuilder<ManagementCubit, ManagementState>(
+              builder: (context, state) {
+                if (state is IncidentNotesLoading) {
+                  return const Text('Notes loading...');
+                } else if (state is IncidentNotesLoaded) {
+                  return ListView.builder(
+                    itemCount: state.notes.length,
                     itemBuilder: (context, index) => ListTile(
-                      title: Text(_notes![index].text),
-                      subtitle: Text(_notes![index].user),
+                      title: Text(state.notes[index].text),
+                      subtitle: Text(state.notes[index].user),
                     ),
                     shrinkWrap: true,
-                  ),
+                  );
+                } else {
+                  return const Text('Error.');
+                }
+              },
+            ),
           ],
         ),
       ),

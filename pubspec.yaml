@@ -47,6 +47,7 @@ dependencies:
   get_it: ^7.2.0
   flutter_bloc: ^8.1.1
   equatable: ^2.0.5
+  map_launcher: ^2.4.0
 
 dev_dependencies:
   flutter_test:
