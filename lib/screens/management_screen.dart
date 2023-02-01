@@ -22,15 +22,17 @@ class ManagementScreenState extends State<ManagementScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Incidents in Zip")),
+      appBar: AppBar(
+        title: const Text('Incidents in Zip'),
+      ),
       body: BlocBuilder<ManagementCubit, ManagementState>(
         builder: (context, state) {
           if (state is IncidentsLoaded) {
             return ListView.builder(
               itemCount: state.incidents.length,
               itemBuilder: (context, index) => ListTile(
-                title: Text(state.incidents[index].description),
-                subtitle: Text(state.incidents[index].address),
+                title: Text(state.incidents[index].address),
+                subtitle: Text(state.incidents[index].description),
                 onTap: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
