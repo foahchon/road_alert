@@ -41,43 +41,10 @@ class _LoadingOverlayState extends State<LoadingOverlay> {
             filter: ImageFilter.blur(sigmaX: 1.5, sigmaY: 1.5),
             child: const Opacity(
               opacity: 0.5,
-              child: ModalBarrier(dismissible: false, color: Colors.black),
+              child: ModalBarrier(dismissible: false, color: Colors.white),
             ),
           ),
-          Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: const [
-                CircularProgressIndicator(),
-                SizedBox(
-                  height: 15,
-                ),
-                DecoratedBox(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.all(
-                      Radius.circular(10.0),
-                    ),
-                    color: Colors.white,
-                  ),
-                  child: Padding(
-                    padding: EdgeInsets.only(
-                      bottom: 5.0,
-                      top: 5.0,
-                      left: 30.0,
-                      right: 30.0,
-                    ),
-                    child: Text(
-                      'Shorter message...',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+          const LinearProgressIndicator(),
         ],
       ],
     );

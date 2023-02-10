@@ -1,11 +1,15 @@
 class Incident {
-  final int id;
-  final String description;
-  final String address;
-  final String zipCode;
-  final double latitude;
-  final double longitude;
-  final String imagePath;
+  int id;
+  String description;
+  String address;
+  String zipCode;
+  double latitude;
+  double longitude;
+  String imagePath;
+  String userId;
+  String email;
+  DateTime? createdAt;
+  bool complete;
 
   Incident(
       {this.id = 0,
@@ -14,7 +18,10 @@ class Incident {
       required this.zipCode,
       required this.latitude,
       required this.longitude,
-      required this.imagePath});
+      required this.imagePath,
+      this.userId = "",
+      this.email = "",
+      required this.complete});
 
   Incident.fromJson(Map<String, dynamic> json)
       : id = json['id'],
@@ -23,7 +30,11 @@ class Incident {
         zipCode = json['zip_code'],
         latitude = json['latitude'],
         longitude = json['longitude'],
-        imagePath = json['image_path'];
+        imagePath = json['image_path'],
+        userId = json['user_id'],
+        email = json['email'],
+        createdAt = DateTime.parse(json['created_at']),
+        complete = json['complete'];
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -32,6 +43,11 @@ class Incident {
         'zip_code': zipCode,
         'latitude': latitude,
         'longitude': longitude,
-        'image_path': imagePath
+        'image_path': imagePath,
+        'user_id': userId,
+        'email': email,
+        'created_at':
+            createdAt != null ? createdAt!.toIso8601String() : DateTime.now(),
+        'complete': complete
       };
 }

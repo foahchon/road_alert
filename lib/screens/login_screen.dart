@@ -30,8 +30,16 @@ class LoginScreenState extends State<LoginScreen> {
             child: ElevatedButton(
           child: const Text("Log In With Google"),
           onPressed: () async {
-            await _authService.signInWithProvider(Provider.google,
-                redirect: 'io.supabase.roadalert://login-callback');
+            try {
+              await _authService.signInWithProvider(Provider.google,
+                  redirect: 'io.supabase.roadalert://login-callback');
+            } on AuthException catch (error) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(error.message),
+                ),
+              );
+            }
           },
         )),
       ),

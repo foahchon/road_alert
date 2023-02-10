@@ -29,6 +29,7 @@ app.use(async (ctx) => {
     const insertData = {
       description: formData.fields['description'],
       address: formData.fields['address'],
+      zip_code: formData.fields['zip_code'],
       latitude: formData.fields['latitude'],
       longitude: formData.fields['longitude'],
       image_path: newFileName,

@@ -17,6 +17,7 @@ class IncidentsService {
   Future<http.StreamedResponse> createIncident(
       String description,
       String address,
+      String zipCode,
       double latitude,
       double longitude,
       String photoPath) async {
@@ -27,6 +28,7 @@ class IncidentsService {
     var request = http.MultipartRequest('POST', uri)
       ..fields['description'] = description
       ..fields['address'] = address
+      ..fields['zip_code'] = zipCode
       ..fields['latitude'] = latitude.toString()
       ..fields['longitude'] = longitude.toString()
       ..headers['Authorization'] = 'Bearer ${_authService.userAccessToken}'
@@ -42,7 +44,7 @@ class IncidentsService {
   }
 
   Future<List<Incident>> getIncidents() async {
-    var data = await _supabase.from('incidents').select() as List<dynamic>;
+    var data = await _supabase.from('incidents_with_users').select() as List<dynamic>;
     return List<Incident>.from(
         data.map((incident) => Incident.fromJson(incident)));
   }
@@ -51,10 +53,10 @@ class IncidentsService {
     return _supabase.storage.from('incident-images').getPublicUrl(path);
   }
 
-  void completeIncident(Incident incident) async {
+  Future<void> completeIncident(Incident incident) async {
     await _supabase
         .from('incidents')
-        .update({'complete': true}).eq('id', incident.id);
+        .update({'complete': true}).match({'id': incident.id});
   }
 
   Future<List<IncidentNote>> getNotesForIncident(Incident incident) async {
@@ -73,5 +75,11 @@ class IncidentsService {
       'text': text,
       'user_id': _authService.userId
     });
+  }
+
+  Future<void> setIncidentComplete(Incident incident, bool complete) async {
+    await _supabase
+        .from('incidents')
+        .update({'complete': complete}).match({'id': incident.id});
   }
 }

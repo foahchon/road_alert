@@ -2,7 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:flutter/material.dart';
 import 'package:road_alert/bloc/authentication/authentication_bloc.dart';
-import 'package:road_alert/bloc/management/management_cubit.dart';
+import 'package:road_alert/bloc/management/incidents_cubit.dart';
 import 'package:road_alert/screens/home_screen.dart';
 import 'package:road_alert/services/auth_service.dart';
 import 'package:road_alert/services/google_maps_service.dart';
@@ -11,6 +11,8 @@ import 'package:road_alert/services/incidents_service.dart';
 import 'package:road_alert/services/location_service.dart';
 import 'package:road_alert/widgets/loading_overlay.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
+final routeObserver = RouteObserver<ModalRoute<void>>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -34,7 +36,7 @@ void main() async {
   GetIt.I.registerSingleton(AuthService());
   GetIt.I.registerSingleton(Supabase);
   GetIt.I.registerFactory(() => IncidentsService(GetIt.I.get<AuthService>(),
-      functionUrl: '${dotenv.env['SUPABASE_FUNCTIONS_URL']}/hello-world'));
+      functionUrl: '${dotenv.env['SUPABASE_FUNCTIONS_URL']}/create-incident'));
   GetIt.I.registerFactory(() => HomeScreen(
         authService: GetIt.I.get<AuthService>(),
         locationService: GetIt.I.get<LocationService>(),
@@ -58,9 +60,11 @@ class MyApp extends StatelessWidget {
           ),
         ),
         BlocProvider(
-          create: (context) => ManagementCubit(
+          create: (context) => IncidentsCubit(
             GetIt.I.get<AuthService>(),
             GetIt.I.get<IncidentsService>(),
+            GetIt.I.get<LocationService>(),
+            GetIt.I.get<GoogleMapsService>(),
           ),
         )
       ],
@@ -68,12 +72,14 @@ class MyApp extends StatelessWidget {
         textDirection: TextDirection.ltr,
         child: LoadingOverlay(
           child: MaterialApp(
-              debugShowCheckedModeBanner: false,
-              title: 'Road Alert',
-              theme: ThemeData(
-                primarySwatch: Colors.blue,
-              ),
-              home: GetIt.I.get<HomeScreen>()),
+            debugShowCheckedModeBanner: false,
+            title: 'Road Alert',
+            theme: ThemeData(
+              primarySwatch: Colors.blue,
+            ),
+            home: GetIt.I.get<HomeScreen>(),
+            navigatorObservers: [routeObserver],
+          ),
         ),
       ),
     );
