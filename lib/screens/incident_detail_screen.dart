@@ -7,6 +7,7 @@ import 'package:road_alert/widgets/confirmation_dialog.dart';
 import 'package:road_alert/widgets/loading_overlay.dart';
 
 import '../bloc/management/incidents_cubit.dart';
+import '../main.dart';
 
 class IncidentDetailScreen extends StatefulWidget {
   final Incident _incident;
@@ -205,7 +206,7 @@ class IncidentDetailScreenState extends State<IncidentDetailScreen>
                         height: 5,
                       ),
                       Text(
-                        'submitted by ${widget._incident.email} at ${widget._incident.createdAt}',
+                        'submitted by ${widget._incident.email} on ${dateTimeFormat.format(widget._incident.createdAt!.toLocal())}',
                         style: Theme.of(context)
                             .textTheme
                             .bodySmall!
@@ -251,7 +252,7 @@ class IncidentDetailScreenState extends State<IncidentDetailScreen>
                                       state.notes[index].text,
                                     ),
                                     subtitle: Text(
-                                      state.notes[index].user,
+                                      '${state.notes[index].user} on ${dateTimeFormat.format(state.notes[index].createdAt!.toLocal())}',
                                     ),
                                   ),
                                 ),

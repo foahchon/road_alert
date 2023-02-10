@@ -48,6 +48,7 @@ dependencies:
   equatable: ^2.0.5
   map_launcher: ^2.4.0
   image_picker: ^0.8.6+1
+  intl: ^0.18.0
 
 dev_dependencies:
   flutter_test:

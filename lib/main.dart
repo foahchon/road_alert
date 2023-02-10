@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart' as intl;
 import 'package:road_alert/bloc/authentication/authentication_bloc.dart';
 import 'package:road_alert/bloc/management/incidents_cubit.dart';
 import 'package:road_alert/screens/home_screen.dart';
@@ -13,8 +14,10 @@ import 'package:road_alert/widgets/loading_overlay.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 final routeObserver = RouteObserver<ModalRoute<void>>();
+final dateTimeFormat = intl.DateFormat("M/d/yyyy h:ma");
 
 void main() async {
+  debugPrint(dateTimeFormat.format(DateTime.now().toLocal()));
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
 

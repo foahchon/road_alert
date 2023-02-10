@@ -106,7 +106,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const PopupMenuItem<int>(
                 value: 1,
-                child: Text('Switch to Manager View'),
+                child: Text('View Incidents'),
               ),
               const PopupMenuItem<int>(
                 value: 2,
