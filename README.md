@@ -1,16 +1,8 @@
-# road_alert
+# Road Alert
 
-A new Flutter project.
+An attempt to duplicate an app that I read about in a local magagzine, where citizens could use a mobile app to report road hazards to their local authorities.
 
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Technologies used
+- Flutter
+- Supabase
+- Postgres
